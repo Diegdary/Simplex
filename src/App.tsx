@@ -1,33 +1,33 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import "./extra_styles/index.css"
+
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [objective, setObjective] = useState("Min")
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
+      <h1 className='title'>Método Simplex</h1>
+      <div className='parameters'>
+        <h2>Función Objetivo:</h2>
+        <p id='objective'>Z(
+          <select name="objective" id="obj">
+          <option value="Max">Max</option>
+          <option value="Min">Min</option>
+        </select>)
         </p>
+        <p>
+          Número de Variables: <input type="number" name="" id="nvariables" />
+        </p>
+        <p id='funcionObjetivo'> </p>
+        <h2>
+          Sujeto A:
+        </h2>
+        <p>
+          Cantidad de Restricciones: <input type="number" name="" id="nrestricciones" />
+        </p>
+        <p id='NoNegatividad'></p>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   )
 }
