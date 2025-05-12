@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import "./extra_styles/index.css"
+import React from 'react'
 
 
 function App() {
-  const [objective, setObjective] = useState("Min")
+  const [objective, setObjective] = useState<string>("Min")
   const [func, setFunc] = useState<number[]>([])
+  const [restrictions, setRestriction] = useState<number[][]>([])
 
   const funcController = (e:React.ChangeEvent<HTMLInputElement>)=>{
     setFunc((last=>{
@@ -32,24 +34,32 @@ function App() {
     })
   }
 
+  const noNegativityBuilder = (): React.JSX.Element[]=>{
+    let new_list = [...func]
+    new_list.pop();
+    return new_list.map((value,index)=>(
+            <p key={index}>X<sub>{index+1},</sub></p>
+            ))
+  }
+
   return (
     <>
       <h1 className='title'>Método Simplex</h1>
       <div className='parameters'>
         <h2>Función Objetivo:</h2>
         <p id='objective'>Z(
-          <select name="objective" id="obj">
-          <option value="Max">Max</option>
-          <option value="Min">Min</option>
-        </select>)
+          <select name="objective" id="obj" onChange={(e)=>{setObjective(e.target.value)}}>
+            <option value="Max">Max</option>
+            <option value="Min">Min</option>
+          </select>)
         </p>
         <p>
           Número de Variables: <input type="number" id="nvariables" onChange={(e)=>{funcController(e)}} />
         </p>
-        <div id='funcionObjetivo'>
+        <div className='row' id='funcionObjetivo'>
           {func.map((value,index)=>(
               <p key={index}>
-              <input type="number" id="" value={func[index]} onChange={e => funcValueController(e,index)}/> X<sub>{index+1}</sub>
+              <input type="number" id="" value={value} onChange={e => funcValueController(e,index)}/> X<sub>{index+1}</sub>
               </p>))}
           </div>
         <h2>
@@ -58,7 +68,14 @@ function App() {
         <p>
           Cantidad de Restricciones: <input type="number" name="" id="nrestricciones" />
         </p>
-        <p id='NoNegatividad'></p>
+        <div>
+
+        </div>
+        <h2>No negatividad:</h2>
+        <div className='row' id='NoNegatividad'>
+          {noNegativityBuilder()}
+          <p>X<sub>{func.length}</sub> &gt;= 0</p>
+        </div>
       </div>
     </>
   )
