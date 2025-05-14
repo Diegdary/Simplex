@@ -55,9 +55,19 @@ function App() {
 
   }
 
-  const restValues = (e:React.ChangeEvent<HTMLInputElement>, parent:number, child:number)=>{
+  const restValues = (e:React.ChangeEvent<HTMLInputElement>,mode:0, indexes:{parent:number,child?:number})=>{
     setRestriction((last)=>{
-
+      const new_restriction = structuredClone(last);
+      switch (mode) {
+        case 0:
+          new_restriction[indexes.parent].variableValues[indexes.child!] = parseInt(e.target.value);
+          break;
+        case 1:
+          new_restriction[indexes.parent].sign = e.target.value;
+          break;
+        default:
+          break;
+      }
       return last
     });
   }
@@ -99,7 +109,7 @@ function App() {
         <div id='restricciones'>
             {restrictions.map((value,index)=>(
               <div className='row' key={index}>
-                {value.variableValues.map((coef,each)=>(<p key={each}><input type="number" value={coef} onChange={e=>restValues(e,index,each)}/>X<sub>{each+1}</sub></p>))}
+                {value.variableValues.map((coef,each)=>(<p key={each}><input type="number" value={coef} onChange={e=>restValues(e,0,{parent:index,child:each})}/>X<sub>{each+1}</sub></p>))}
                 <select name="">
                   <option value="<=">&lt;=</option>
                   <option value=">=">&gt;=</option>
