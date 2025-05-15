@@ -21,19 +21,19 @@ function App() {
   }
 
   const funcValueController = (e: React.ChangeEvent<HTMLInputElement>,index:number)=>{
+    const received = parseInt(e.target.value);
     setFunc((last)=>{
       let new_list = [...last] 
-      new_list[index]= parseInt(e.target.value)
+      new_list[index]= received;
+
       return new_list;
     })
   }
 
   const restSizeController = (e:HTMLInputElement,funcLength:number)=>{
-    console.log(e.value)
-    console.log(funcLength)
+
     let limit:number = parseInt(e.value);
-    limit =  isNaN(limit)?0:limit;
-    e.value = `${limit}`;
+    
     setRestriction((last)=>{
       let new_restrictions:restriction[] = []
       for (let i = 0; i < limit; i++) {
@@ -46,7 +46,7 @@ function App() {
           let element:number[] = [];
           for (let j = 0; j < funcLength; j++) {
             element[j]= 0;
-          }
+          } 
           new_restrictions.push({constant:0,sign:"<=",variableValues:element});
         }
       }
@@ -55,7 +55,7 @@ function App() {
 
   }
 
-  const restValues = (e:React.ChangeEvent<HTMLInputElement>,mode:0, indexes:{parent:number,child?:number})=>{
+  const restValues = (e:React.ChangeEvent<HTMLInputElement>|React.ChangeEvent<HTMLSelectElement>,mode:number, indexes:{parent:number,child?:number})=>{
     setRestriction((last)=>{
       const new_restriction = structuredClone(last);
       switch (mode) {
@@ -63,14 +63,21 @@ function App() {
           new_restriction[indexes.parent].variableValues[indexes.child!] = parseInt(e.target.value);
           break;
         case 1:
-          new_restriction[indexes.parent].sign = e.target.value;
+          new_restriction[indexes.parent].sign = e.target.value as restriction["sign"];
+          break;
+        case 2:
+          new_restriction[indexes.parent].constant= parseInt(e.target.value);
           break;
         default:
+          alert("Something's wrong...");
           break;
       }
-      return last
+     
+      return new_restriction;
     });
   }
+
+  
 
   const noNegativityBuilder = (): React.JSX.Element[]=>{
     let new_list = [...func]
@@ -78,6 +85,35 @@ function App() {
     return new_list.map((value,index)=>(
             <p key={index}>X<sub>{index+1},</sub></p>
             ))
+  }
+
+  const compatibleData = (first_list:number[],second_list:restriction[]):boolean=>{//ADD THE FACT THAT THE LENGTHS CANNOT BE 0 AND ALLOW -values
+    for (const num of first_list) {
+      if(isNaN(num)){
+        return false;
+      }
+    }
+    for (const parent of second_list) {
+      for(const child of parent.variableValues){
+        if(isNaN(child)){
+          return false
+        }
+      }
+      
+    }
+    return true;
+  }
+
+  const execution = (first_list:number[],second_list:restriction[])=>{
+    if(compatibleData(first_list,second_list)){
+      console.log(first_list);
+      console.log(second_list);
+      console.log("simplex!:")
+    }
+    else{
+      alert("Datos no válidos.");
+    }
+    
   }
 
   return (
@@ -110,14 +146,14 @@ function App() {
             {restrictions.map((value,index)=>(
               <div className='row' key={index}>
                 {value.variableValues.map((coef,each)=>(<p key={each}><input type="number" value={coef} onChange={e=>restValues(e,0,{parent:index,child:each})}/>X<sub>{each+1}</sub></p>))}
-                <select name="">
+                <select id='random' name="" onChange={e=>{restValues(e,1,{parent:index})}}>
                   <option value="<=">&lt;=</option>
                   <option value=">=">&gt;=</option>
                   <option value="<">&lt;</option>
                   <option value=">">&gt;</option>
                   <option value="=">=</option>
                 </select>
-                <input type="text" value={value.constant}/>
+                <input type="number" value={value.constant} onChange={e=>{restValues(e,2,{parent:index})}}/>
               </div>)
             )}
         </div>
@@ -125,6 +161,9 @@ function App() {
         <div className='row' id='NoNegatividad'>
           {noNegativityBuilder()}
           <p>X<sub>{func.length}</sub> &gt;= 0</p>
+        </div>
+        <div>
+          <button onClick={()=>execution(func,restrictions)}>Aplicar</button>
         </div>
       </div>
     </>
