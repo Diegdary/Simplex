@@ -90,7 +90,10 @@ function App() {
   }
 
   const compatibleData = (first_list:string[],second_list:restriction[]):boolean=>{//ADD THE FACT THAT THE LENGTHS CANNOT BE 0 AND ALLOW -values
-
+   
+    if(!first_list.length || !second_list.length){
+      return false;
+    }
     for (const num of first_list) {
       if(isNaN(parseFloat(num))){
         return false;
