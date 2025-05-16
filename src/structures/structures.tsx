@@ -2,10 +2,11 @@ export interface typeObjective{
     value: "Min"|"Max"
 }
 
+
 export interface restriction{
-    variableValues: number[],
-    sign: "<"|"<="|">"|">="|"="
-    constant: number
+    variableValues: string[],
+    sign: "<"|"<="|">"|">="|"=",
+    constant: string
 }
 
 type ChangeArrayFn = <T>(array: T[], limit: number, alternative: T) => T[];

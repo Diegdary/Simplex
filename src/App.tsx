@@ -5,7 +5,7 @@ import  { type restriction, changeArray } from './structures/structures';
 
 function App() {
   const [objective, setObjective] = useState<string>("Min");
-  const [func, setFunc] = useState<number[]>([]);
+  const [func, setFunc] = useState<string[]>([]);
   const [restrictions, setRestriction] = useState<restriction[]>([]);//restrictions have every coeficient and the value they are being compared to.
 
   
@@ -15,15 +15,17 @@ function App() {
     restSizeController((document.getElementById("nrestricciones") as HTMLInputElement)!, current_length);
     setFunc((last=>{
       const limit = current_length;
-      return changeArray(last,limit,1);
+      return changeArray(last,limit,"1");
     }));
     
   }
 
   const funcValueController = (e: React.ChangeEvent<HTMLInputElement>,index:number)=>{
-    const received = parseInt(e.target.value);
+    const received =e.target.value;
+    console.log(received)
+    console.log(e.target.value);
     setFunc((last)=>{
-      let new_list = [...last] 
+      let new_list = [...last];
       new_list[index]= received;
 
       return new_list;
@@ -39,15 +41,15 @@ function App() {
       for (let i = 0; i < limit; i++) {
         if (i < last.length) {
           //CREATE A FUNCTION THAT MAKES THIS SHIT AUTOMATICALLY
-          let tmp_rest:number[] = changeArray(last[i].variableValues, funcLength, 0);
+          let tmp_rest:string[] = changeArray(last[i].variableValues, funcLength, "0");
           new_restrictions.push({constant:last[i].constant,sign:last[i].sign,variableValues:tmp_rest});
         }
         else{
-          let element:number[] = [];
+          let element:string[] = [];
           for (let j = 0; j < funcLength; j++) {
-            element[j]= 0;
+            element[j]= "0";
           } 
-          new_restrictions.push({constant:0,sign:"<=",variableValues:element});
+          new_restrictions.push({constant:"0",sign:"<=",variableValues:element});
         }
       }
       return new_restrictions;
@@ -60,13 +62,13 @@ function App() {
       const new_restriction = structuredClone(last);
       switch (mode) {
         case 0:
-          new_restriction[indexes.parent].variableValues[indexes.child!] = parseInt(e.target.value);
+          new_restriction[indexes.parent].variableValues[indexes.child!] = e.target.value;
           break;
         case 1:
           new_restriction[indexes.parent].sign = e.target.value as restriction["sign"];
           break;
         case 2:
-          new_restriction[indexes.parent].constant= parseInt(e.target.value);
+          new_restriction[indexes.parent].constant= e.target.value;
           break;
         default:
           alert("Something's wrong...");
@@ -87,24 +89,27 @@ function App() {
             ))
   }
 
-  const compatibleData = (first_list:number[],second_list:restriction[]):boolean=>{//ADD THE FACT THAT THE LENGTHS CANNOT BE 0 AND ALLOW -values
+  const compatibleData = (first_list:string[],second_list:restriction[]):boolean=>{//ADD THE FACT THAT THE LENGTHS CANNOT BE 0 AND ALLOW -values
+
     for (const num of first_list) {
-      if(isNaN(num)){
+      if(isNaN(parseFloat(num))){
         return false;
       }
     }
     for (const parent of second_list) {
       for(const child of parent.variableValues){
-        if(isNaN(child)){
+        if(isNaN(parseFloat(child))){
           return false
         }
       }
-      
+      if (isNaN(parseFloat(parent.constant))) {
+        return false
+      }
     }
     return true;
   }
 
-  const execution = (first_list:number[],second_list:restriction[])=>{
+  const execution = (first_list:string[],second_list:restriction[])=>{
     if(compatibleData(first_list,second_list)){
       console.log(first_list);
       console.log(second_list);
