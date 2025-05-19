@@ -1,0 +1,21 @@
+.border_none{
+    border:none
+}
+
+input{
+    width: 80px;
+}
+
+.title{
+    text-align: center;
+}
+
+.row{
+    display: flex;
+}
+
+.parameters{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}

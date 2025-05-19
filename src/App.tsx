@@ -1,14 +1,15 @@
 import { useState } from 'react'
-import "./extra_styles/index.css"
+import "./styles/index.css"
 import React from 'react'
-import  { type restriction, changeArray } from './structures/structures';
+import  { type restriction,type finalParameters, changeArray } from './steps/structures';
+import simplex from './steps/algorithm';
 
 function App() {
   const [objective, setObjective] = useState<string>("Min");
   const [func, setFunc] = useState<string[]>([]);
   const [restrictions, setRestriction] = useState<restriction[]>([]);//restrictions have every coeficient and the value they are being compared to.
 
-  
+   
 
   const funcController = (e:React.ChangeEvent<HTMLInputElement>)=>{
     const current_length = parseInt(e.target.value);
@@ -41,7 +42,7 @@ function App() {
       for (let i = 0; i < limit; i++) {
         if (i < last.length) {
           //CREATE A FUNCTION THAT MAKES THIS SHIT AUTOMATICALLY
-          let tmp_rest:string[] = changeArray(last[i].variableValues, funcLength, "0");
+          let tmp_rest:string[] = changeArray(last[i].variableValues as string[], funcLength, "0");
           new_restrictions.push({constant:last[i].constant,sign:last[i].sign,variableValues:tmp_rest});
         }
         else{
@@ -89,34 +90,44 @@ function App() {
             ))
   }
 
-  const compatibleData = (first_list:string[],second_list:restriction[]):boolean=>{//ADD THE FACT THAT THE LENGTHS CANNOT BE 0 AND ALLOW -values
-   
+  const compatibleData = (first_list:string[],second_list:restriction[]):finalParameters | null=>{
+    
+    let finalData:finalParameters = {finalFunc:[],finalRestric:second_list};
     if(!first_list.length || !second_list.length){
-      return false;
+      return null;
     }
+    //type casting of the function list:
     for (const num of first_list) {
-      if(isNaN(parseFloat(num))){
-        return false;
+      const item = parseFloat(num);
+      if(isNaN(item)){
+        return null;
       }
+      finalData.finalFunc.push(item);
     }
-    for (const parent of second_list) {
-      for(const child of parent.variableValues){
-        if(isNaN(parseFloat(child))){
-          return false
+    //type casting of the restriction list:
+    for (let i = 0; i < second_list.length; i++) {
+      for(let j=0; j < second_list[i].variableValues.length; j++){
+        const item = parseFloat(second_list[i].variableValues[j] as string);
+        if(isNaN(item)){
+          return null
         }
+        finalData.finalRestric[i].variableValues[j] = item;
       }
-      if (isNaN(parseFloat(parent.constant))) {
-        return false
+      const item =parseFloat(second_list[i].constant as string);
+      if (isNaN(item)) {
+        return null
       }
+      finalData.finalRestric[i].constant = item;
     }
-    return true;
+    console.log(finalData)
+    return finalData;
   }
 
   const execution = (first_list:string[],second_list:restriction[])=>{
-    if(compatibleData(first_list,second_list)){
-      console.log(first_list);
-      console.log(second_list);
+    let finalData=compatibleData(first_list,second_list);
+    if(finalData){
       console.log("simplex!:")
+      simplex(finalData);
     }
     else{
       alert("Datos no válidos.");
@@ -130,7 +141,7 @@ function App() {
       <div className='parameters'>
         <h2>Función Objetivo:</h2>
         <p id='objective'>Z(
-          <select name="objective" id="obj" onChange={(e)=>{setObjective(e.target.value)}}>
+          <select className='border_none' name="objective" id="obj" onChange={(e)=>{setObjective(e.target.value)}}>
             <option value="Max">Max</option>
             <option value="Min">Min</option>
           </select>)
@@ -154,7 +165,7 @@ function App() {
             {restrictions.map((value,index)=>(
               <div className='row' key={index}>
                 {value.variableValues.map((coef,each)=>(<p key={each}><input type="number" value={coef} onChange={e=>restValues(e,0,{parent:index,child:each})}/>X<sub>{each+1}</sub></p>))}
-                <select id='random' name="" onChange={e=>{restValues(e,1,{parent:index})}}>
+                <select className='border_none' id='random' name="" onChange={e=>{restValues(e,1,{parent:index})}}>
                   <option value="<=">&lt;=</option>
                   <option value=">=">&gt;=</option>
                   <option value="<">&lt;</option>
