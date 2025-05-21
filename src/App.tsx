@@ -88,6 +88,15 @@ function App() {
             ))
   }
 
+  const anyListBuilder = (array:any[]): React.JSX.Element[]=>{
+      let new_list=[...array];
+      new_list.pop();
+      return new_list.map((value,index)=>(
+              <p key={index}>
+              <input type="number" id="" value={value} onChange={e => funcValueController(e,index)}/> X<sub>{index+1}</sub> +
+              </p>))
+  }
+
   const compatibleData = (first_list:string[],second_list:restriction[],typeObj:string):finalParameters | null=>{
     
     let finalData:finalParameters = {finalFunc:[],finalRestric:second_list,typeObj:typeObj as finalParameters["typeObj"]};
@@ -147,10 +156,10 @@ function App() {
           Número de Variables: <input type="number" id="nvariables" value={func.length} onChange={(e)=>{funcController(e)}} />
         </p>
         <div className='row' id='funcionObjetivo'>
-          {func.map((value,index)=>(
-              <p key={index}>
-              <input type="number" id="" value={value} onChange={e => funcValueController(e,index)}/> X<sub>{index+1}</sub>
-              </p>))}
+          {anyListBuilder(func)}
+          <p key={func.length}>
+              <input type="number" id="" value={func[func.length-1]} onChange={e => funcValueController(e,func.length-1)}/> X<sub>{func.length}</sub>
+              </p>
           </div>
         <h2>
           Sujeto A:
@@ -161,7 +170,7 @@ function App() {
         <div id='restricciones'>
             {restrictions.map((value,index)=>(
               <div className='row' key={index}>
-                {value.variableValues.map((coef,each)=>(<p key={each}><input type="number" value={coef} onChange={e=>restValues(e,0,{parent:index,child:each})}/>X<sub>{each+1}</sub></p>))}
+                {value.variableValues.map((coef,each)=>(<p key={each}><input type="number" value={coef} onChange={e=>restValues(e,0,{parent:index,child:each})}/>X<sub>{each+1}</sub> + </p>))}
                 <select className='border_none' id='random' name="" onChange={e=>{restValues(e,1,{parent:index})}}>
                   <option value="<=">&lt;=</option>
                   <option value=">=">&gt;=</option>

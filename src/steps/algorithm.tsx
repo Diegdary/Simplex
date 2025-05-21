@@ -42,6 +42,8 @@ const standardize = (params:finalParameters)=>{
 
 const simplex = (params:finalParameters)=>{
     standardize(params)
+    let matrix = [];
+    
 }
 
 export default simplex;
