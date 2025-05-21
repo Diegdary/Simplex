@@ -1,14 +1,13 @@
-export interface typeObjective{
-    value: "Min"|"Max"
-}
+
 
 export interface restriction{
     variableValues: string[] | number[],
-    sign: "<"|"<="|">"|">="|"=",
+    sign: "<="|">="|"=",
     constant: string | number
 }
 
 export interface finalParameters{
+  typeObj: "Min"|"Max",
   finalFunc:number[],
   finalRestric:restriction[]
 }

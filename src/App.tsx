@@ -90,9 +90,9 @@ function App() {
             ))
   }
 
-  const compatibleData = (first_list:string[],second_list:restriction[]):finalParameters | null=>{
+  const compatibleData = (first_list:string[],second_list:restriction[],typeObj:string):finalParameters | null=>{
     
-    let finalData:finalParameters = {finalFunc:[],finalRestric:second_list};
+    let finalData:finalParameters = {finalFunc:[],finalRestric:second_list,typeObj:typeObj as finalParameters["typeObj"]};
     if(!first_list.length || !second_list.length){
       return null;
     }
@@ -123,8 +123,8 @@ function App() {
     return finalData;
   }
 
-  const execution = (first_list:string[],second_list:restriction[])=>{
-    let finalData=compatibleData(first_list,second_list);
+  const execution = (first_list:string[],second_list:restriction[],typeObj:string)=>{
+    let finalData=compatibleData(first_list,second_list,typeObj);
     if(finalData){
       console.log("simplex!:")
       simplex(finalData);
@@ -182,7 +182,7 @@ function App() {
           <p>X<sub>{func.length}</sub> &gt;= 0</p>
         </div>
         <div>
-          <button onClick={()=>execution(func,restrictions)}>Aplicar</button>
+          <button onClick={()=>execution(func,restrictions,objective)}>Aplicar</button>
         </div>
       </div>
     </>
