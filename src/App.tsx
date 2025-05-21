@@ -5,7 +5,7 @@ import  { type restriction,type finalParameters, changeArray } from './steps/str
 import simplex from './steps/algorithm';
 
 function App() {
-  const [objective, setObjective] = useState<string>("Min");
+  const [objective, setObjective] = useState<string>("Max");
   const [func, setFunc] = useState<string[]>([]);
   const [restrictions, setRestriction] = useState<restriction[]>([]);//restrictions have every coeficient and the value they are being compared to.
 
@@ -23,8 +23,6 @@ function App() {
 
   const funcValueController = (e: React.ChangeEvent<HTMLInputElement>,index:number)=>{
     const received =e.target.value;
-    console.log(received)
-    console.log(e.target.value);
     setFunc((last)=>{
       let new_list = [...last];
       new_list[index]= received;
@@ -119,7 +117,6 @@ function App() {
       }
       finalData.finalRestric[i].constant = item;
     }
-    console.log(finalData)
     return finalData;
   }
 
@@ -168,8 +165,6 @@ function App() {
                 <select className='border_none' id='random' name="" onChange={e=>{restValues(e,1,{parent:index})}}>
                   <option value="<=">&lt;=</option>
                   <option value=">=">&gt;=</option>
-                  <option value="<">&lt;</option>
-                  <option value=">">&gt;</option>
                   <option value="=">=</option>
                 </select>
                 <input type="number" value={value.constant} onChange={e=>{restValues(e,2,{parent:index})}}/>
