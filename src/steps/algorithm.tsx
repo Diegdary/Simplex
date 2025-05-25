@@ -38,12 +38,18 @@ const standardize = (params:finalParameters)=>{
     for (const x of funcObj.keys()) {
         console.log(restrictions[1].get(x))
     }
+    return {funcObj:funcObj,restrictions:restrictions}
 }
 
 const simplex = (params:finalParameters)=>{
-    standardize(params)
-    let matrix = [];
-    
+    const enter_values = standardize(params)
+    let matrix = [[null,null,"Cj"],["Ci","Vb","Bi"]];
+    //filling first table
+    for (const [key, value] of enter_values.funcObj) {
+        matrix[0].push(value);
+    }
+    matrix[0].push(null);
+    console.log(matrix)
 }
 
 export default simplex;
