@@ -1,5 +1,4 @@
 
-
 export interface restriction{
     variableValues: string[] | number[],
     sign: "<="|">="|"=",
