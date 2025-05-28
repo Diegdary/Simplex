@@ -52,9 +52,6 @@ const standardize = (params:finalParameters)=>{
     }
     console.log(funcObj);
     console.log(restrictions)
-    for (const x of funcObj.keys()) {
-        console.log(restrictions[1].get(x))
-    }
     return {funcObj:funcObj,restrictions:restrictions}
 }
 
