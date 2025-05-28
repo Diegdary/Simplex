@@ -1,5 +1,22 @@
 import {type finalParameters ,standardTable} from "./structures"
 
+const getGreaterColumn =(typeObj:string,list:number[][],M:number)=>{
+    let index = 1;
+    const sumList = list.map((e)=> e[0]*M + e[1]);
+    let typeFunc = (oldNum:number,newNum:number)=>newNum<oldNum;//Min
+    if (typeObj == "Max") {
+        typeFunc = (oldNum:number,newNum:number)=>newNum>oldNum;//Max
+    }
+    for (let i = 2; i < list.length+1; i++) {
+        const oldNum:number = sumList[index];
+        const newNum:number = sumList[i];
+        if (typeFunc(oldNum,newNum)) {
+            index=i;
+        }
+    }
+    return index+2;
+}
+
 const standardize = (params:finalParameters)=>{
     let funcObj = new Map()
     let restrictions = [];
@@ -68,10 +85,10 @@ const simplex = (params:finalParameters)=>{
         }
         matrix[i+2].push("");
     }//Zj
-    matrix.push(["Zj"])
-    let abstractM = [];
+    matrix.push(["","Zj"])
+    let abstractM:number[][] = [];
     const M_sign = new Map([["M",1],["-M",-1]])
-    for (let column = 2; column < enter_values.funcObj.size+2; column++) {
+    for (let column = 2; column < enter_values.funcObj.size+3; column++) {
         let m_counter =0;
         let non_M = 0;
         for (let row = 2; row < enter_values.restrictions.length+2; row++) {
@@ -83,9 +100,36 @@ const simplex = (params:finalParameters)=>{
             }
         }
         abstractM.push([m_counter,non_M])
+        matrix[enter_values.restrictions.length+2].push(`${non_M}+${m_counter}M`);//CHANGE
     }
+    matrix[enter_values.restrictions.length+2].push("");
+    matrix.push(["Cj-Zj",""]);
+    for (let i = 1; i <= enter_values.funcObj.size; i++) {
+        
+        abstractM[i] = abstractM[i].map(e=> e*-1);
+        if (M_sign.has(matrix[0][i+2])) {
+            abstractM[i][0]+= M_sign.get(matrix[0][i+2])!;
+        }
+        else{
+            abstractM[i][1]+= matrix[0][i+2];
+        }
+        matrix[matrix.length-1].push(`${abstractM[i][1]}+${abstractM[i][0]}M`);//CHANGE
+    }
+    
+    const selectedColumn= getGreaterColumn(params.typeObj,abstractM,1000);
+    let selectedRow = 2;
+    for (let i = 2; i < enter_values.restrictions.length+2; i++) {
+        const theta = matrix[i][2]/matrix[i][selectedColumn];
+        matrix[i][enter_values.funcObj.size+3]= theta;
+        if (theta > 0 && theta<matrix[selectedRow][enter_values.funcObj.size+3]) {
+            selectedRow = i;
+        }
+    }
+
     console.log(abstractM)
     console.log(matrix);
+    console.log("Column selected: " + getGreaterColumn(params.typeObj,abstractM,1000));
+    console.log("Row selected: " + selectedRow)
 }
 
 export default simplex;
