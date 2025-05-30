@@ -25,6 +25,14 @@ export const changeArray: ChangeArrayFn = (original,limit,alternative)=>{
     return new_list;
   }
 
+export interface completeSizes{
+  M:number,
+  restLength:number,
+  funcLength:number,
+  selectedRow:number,
+  selectedColumn:number
+} 
+
 export const standardTable = {
   "Min":{
     "function":{

@@ -1,4 +1,4 @@
-import {type finalParameters ,standardTable} from "./structures"
+import {type finalParameters,type completeSizes ,standardTable} from "./structures"
 
 const getGreaterColumn =(typeObj:string,list:number[][],M:number)=>{
     let index = 1;
@@ -7,7 +7,7 @@ const getGreaterColumn =(typeObj:string,list:number[][],M:number)=>{
     if (typeObj == "Max") {
         typeFunc = (oldNum:number,newNum:number)=>newNum>oldNum;//Max
     }
-    for (let i = 2; i < list.length+1; i++) {
+    for (let i = 2; i < list.length; i++) {
         const oldNum:number = sumList[index];
         const newNum:number = sumList[i];
         if (typeFunc(oldNum,newNum)) {
@@ -15,6 +15,60 @@ const getGreaterColumn =(typeObj:string,list:number[][],M:number)=>{
         }
     }
     return index+2;
+}
+
+const getSelectedRow =(matrix:any[][],selectedColumn:number,sizes:{restLength:number,funcLength:number})=>{
+    let selectedRow = 2;
+    for (let i = 2; i < sizes.restLength+2; i++) {
+        const theta = matrix[i][2]/matrix[i][selectedColumn];
+        matrix[i][sizes.funcLength+3]= theta;
+        if (theta > 0 && theta<matrix[selectedRow][sizes.funcLength+3]) {
+            selectedRow = i;
+        }
+    }
+    return {matrix:matrix,selectedRow:selectedRow};
+}
+
+const validTable = (typeObj:string,list:number[][],M:number):boolean=>{
+    const sumList = list.map((e)=> e[0]*M + e[1]);
+    let mainF = (num:number)=>num>=0;//Min
+    if (typeObj == "Max"){
+        mainF = (num:number)=>num<=0;
+    }
+    for (let i = 1; i < list.length; i++) {
+        if(!mainF(sumList[i])){
+            return false
+        }
+    }
+    return true;
+}
+
+const iterate = (sizes:completeSizes,typeObj:string,matrix:any[][],abstractM:number[][])=>{
+    let information = [{matrix:matrix,selectedRow:sizes.selectedRow,selectedColumn:sizes.selectedColumn}];
+    let pivotColumn=sizes.selectedColumn;
+    let pivotRow=sizes.selectedRow;
+    let oldMatrix = structuredClone(matrix);// perhaps this one is not necessary
+     while (!validTable(typeObj,abstractM,sizes.M)) {
+        let nextMatrix = structuredClone(oldMatrix);
+        nextMatrix[pivotRow][0]=nextMatrix[0][pivotColumn];
+        nextMatrix[pivotRow][1]=nextMatrix[1][pivotColumn];
+        //entry row
+        for (let i = 2; i <= sizes.funcLength+2; i++) {
+            nextMatrix[pivotRow][i] /= oldMatrix[pivotRow][pivotColumn];
+        }
+        for (let row = 2; row < sizes.restLength+2; row++) {
+            if(row != pivotRow){
+                for (let column = 2; column <= sizes.funcLength+2; column++) {
+                    nextMatrix[row][column]= oldMatrix[row][column] - (oldMatrix[row][pivotColumn]*nextMatrix[pivotRow][column]);
+                }
+            }
+        }
+        console.log(nextMatrix)
+        break;
+
+
+        oldMatrix = nextMatrix;
+     }
 }
 
 const standardize = (params:finalParameters)=>{
@@ -89,7 +143,7 @@ const simplex = (params:finalParameters)=>{
         let m_counter =0;
         let non_M = 0;
         for (let row = 2; row < enter_values.restrictions.length+2; row++) {
-            if(M_sign.has(matrix[row][0])){//possible error
+            if(M_sign.has(matrix[row][0])){
                 m_counter+= matrix[row][column] * M_sign.get(matrix[row][0])!;
             }
             else{
@@ -114,19 +168,16 @@ const simplex = (params:finalParameters)=>{
     }
     
     const selectedColumn= getGreaterColumn(params.typeObj,abstractM,1000);
-    let selectedRow = 2;
-    for (let i = 2; i < enter_values.restrictions.length+2; i++) {
-        const theta = matrix[i][2]/matrix[i][selectedColumn];
-        matrix[i][enter_values.funcObj.size+3]= theta;
-        if (theta > 0 && theta<matrix[selectedRow][enter_values.funcObj.size+3]) {
-            selectedRow = i;
-        }
-    }
-
+    const rowSelection=getSelectedRow(matrix,selectedColumn,{restLength:enter_values.restrictions.length,funcLength:enter_values.funcObj.size});
+    matrix = rowSelection.matrix;
+    const sizes= {M:1000,funcLength:enter_values.funcObj.size,restLength:enter_values.restrictions.length,selectedColumn:selectedColumn,selectedRow:rowSelection.selectedRow}; 
+    
     console.log(abstractM)
     console.log(matrix);
+    console.log("valid?:"+validTable(params.typeObj,abstractM,1000));
     console.log("Column selected: " + getGreaterColumn(params.typeObj,abstractM,1000));
-    console.log("Row selected: " + selectedRow)
+    console.log("Row selected: " + rowSelection.selectedRow)
+    iterate(sizes,params.typeObj,matrix,abstractM);
 }
 
 export default simplex;
