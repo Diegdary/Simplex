@@ -43,12 +43,14 @@ const validTable = (typeObj:string,list:number[][],M:number):boolean=>{
     return true;
 }
 
-const iterate = (sizes:completeSizes,typeObj:string,matrix:any[][],abstractM:number[][])=>{
+const iterate = (sizes:completeSizes,typeObj:string,matrix:any[][],lastAbstM:number[][])=>{
     let information = [{matrix:matrix,selectedRow:sizes.selectedRow,selectedColumn:sizes.selectedColumn}];
     let pivotColumn=sizes.selectedColumn;
     let pivotRow=sizes.selectedRow;
     let oldMatrix = structuredClone(matrix);// perhaps this one is not necessary
+    let abstractM = structuredClone(lastAbstM);
      while (!validTable(typeObj,abstractM,sizes.M)) {
+        
         let nextMatrix = structuredClone(oldMatrix);
         nextMatrix[pivotRow][0]=nextMatrix[0][pivotColumn];
         nextMatrix[pivotRow][1]=nextMatrix[1][pivotColumn];
@@ -63,11 +65,48 @@ const iterate = (sizes:completeSizes,typeObj:string,matrix:any[][],abstractM:num
                 }
             }
         }
-        console.log(nextMatrix)
-        break;
-
-
-        oldMatrix = nextMatrix;
+        
+        ////////////////
+        nextMatrix[sizes.restLength+2] =["","Zj"];
+        abstractM = [];
+        const M_sign = new Map([["M",1],["-M",-1]]);
+         for (let column = 2; column < sizes.funcLength + 3; column++) {
+             let m_counter = 0;
+             let non_M = 0;
+             for (let row = 2; row < sizes.restLength + 2; row++) {
+                 if (M_sign.has(nextMatrix[row][0])) {
+                     m_counter += nextMatrix[row][column] * M_sign.get(nextMatrix[row][0])!;
+                 }
+                 else {
+                     non_M += nextMatrix[row][column] * nextMatrix[row][0];
+                 }
+             }
+             abstractM.push([m_counter, non_M]);
+             nextMatrix[sizes.restLength + 2].push(`${non_M}+${m_counter}M`);//CHANGE
+         }
+         nextMatrix[sizes.restLength + 2].push("")
+         nextMatrix.pop();
+         nextMatrix.push(["", "Cj-Zj", ""]);
+         for (let i = 1; i <= sizes.funcLength; i++) {
+             abstractM[i] = abstractM[i].map(e => e * -1);
+             if (M_sign.has(nextMatrix[0][i + 2])) {
+                 abstractM[i][0] += M_sign.get(nextMatrix[0][i + 2])!;
+             }
+             else {
+                 abstractM[i][1] += nextMatrix[0][i + 2];
+             }
+             nextMatrix[nextMatrix.length - 1].push(`${abstractM[i][1]}+${abstractM[i][0]}M`);//CHANGE
+         }
+         nextMatrix[nextMatrix.length - 1].push("");
+         
+         pivotColumn = getGreaterColumn(typeObj,abstractM,sizes.M)
+         const rowSelection = getSelectedRow(nextMatrix,pivotColumn,{restLength:sizes.restLength,funcLength:sizes.funcLength});
+         pivotRow = rowSelection.selectedRow;
+         nextMatrix = rowSelection.matrix;
+         console.log(nextMatrix)
+         oldMatrix = nextMatrix;
+         
+         
      }
 }
 
@@ -136,7 +175,7 @@ const simplex = (params:finalParameters)=>{
         }
         matrix[i+2].push("");
     }//Zj
-    matrix.push(["","Zj"])
+    matrix.push(["","Zj"]);
     let abstractM:number[][] = [];
     const M_sign = new Map([["M",1],["-M",-1]])
     for (let column = 2; column < enter_values.funcObj.size+3; column++) {
@@ -154,7 +193,7 @@ const simplex = (params:finalParameters)=>{
         matrix[enter_values.restrictions.length+2].push(`${non_M}+${m_counter}M`);//CHANGE
     }
     matrix[enter_values.restrictions.length+2].push("");
-    matrix.push(["Cj-Zj",""]);
+    matrix.push(["","Cj-Zj",""]);
     for (let i = 1; i <= enter_values.funcObj.size; i++) {
         
         abstractM[i] = abstractM[i].map(e=> e*-1);
@@ -166,7 +205,7 @@ const simplex = (params:finalParameters)=>{
         }
         matrix[matrix.length-1].push(`${abstractM[i][1]}+${abstractM[i][0]}M`);//CHANGE
     }
-    
+    matrix[matrix.length-1].push("");
     const selectedColumn= getGreaterColumn(params.typeObj,abstractM,1000);
     const rowSelection=getSelectedRow(matrix,selectedColumn,{restLength:enter_values.restrictions.length,funcLength:enter_values.funcObj.size});
     matrix = rowSelection.matrix;
