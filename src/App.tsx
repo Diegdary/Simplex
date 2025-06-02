@@ -85,7 +85,7 @@ function App() {
     let new_list = [...func]
     new_list.pop();
     return new_list.map((value,index)=>(
-            <p key={index}>X<sub>{index+1},</sub></p>
+            <p key={value}>X<sub>{index+1},</sub></p>
             ))
   }
 
