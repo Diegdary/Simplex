@@ -19,3 +19,8 @@ input{
     flex-direction: column;
     align-items: center;
 }
+
+.grid-child{
+    border: 1px solid black;
+    text-align: center;
+}

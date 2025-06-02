@@ -18,11 +18,14 @@ const getGreaterColumn =(typeObj:string,list:number[][],M:number)=>{
 }
 
 const getSelectedRow =(matrix:any[][],selectedColumn:number,sizes:{restLength:number,funcLength:number})=>{
-    let selectedRow = 2;
+    let selectedRow = NaN;
     for (let i = 2; i < sizes.restLength+2; i++) {
         const theta = matrix[i][2]/matrix[i][selectedColumn];
         matrix[i][sizes.funcLength+3]= theta;
-        if (theta > 0 && theta<matrix[selectedRow][sizes.funcLength+3]) {
+        if(theta>0 && isNaN(selectedRow)){
+            selectedRow = i;
+        }
+        if (!isNaN(selectedRow) && theta > 0 && theta<matrix[selectedRow][sizes.funcLength+3]) {
             selectedRow = i;
         }
     }
@@ -43,14 +46,15 @@ const validTable = (typeObj:string,list:number[][],M:number):boolean=>{
     return true;
 }
 
-const iterate = (sizes:completeSizes,typeObj:string,matrix:any[][],lastAbstM:number[][])=>{
-    let information = [{matrix:matrix,selectedRow:sizes.selectedRow,selectedColumn:sizes.selectedColumn}];
+const iterate = (sizes:completeSizes,typeObj:string,matrix:any[][]|any[],lastAbstM:number[][])=>{
+    let information = [{matrix:matrix,selectedRow:sizes.selectedRow,selectedColumn:sizes.selectedColumn,columnSize:sizes.funcLength+4}];
     let pivotColumn=sizes.selectedColumn;
     let pivotRow=sizes.selectedRow;
     let oldMatrix = structuredClone(matrix);// perhaps this one is not necessary
     let abstractM = structuredClone(lastAbstM);
-     while (!validTable(typeObj,abstractM,sizes.M)) {
-        
+    let outBounds = 0;
+     while (!validTable(typeObj,abstractM,sizes.M) && outBounds<10) {
+        //debugger
         let nextMatrix = structuredClone(oldMatrix);
         nextMatrix[pivotRow][0]=nextMatrix[0][pivotColumn];
         nextMatrix[pivotRow][1]=nextMatrix[1][pivotColumn];
@@ -66,7 +70,6 @@ const iterate = (sizes:completeSizes,typeObj:string,matrix:any[][],lastAbstM:num
             }
         }
         
-        ////////////////
         nextMatrix[sizes.restLength+2] =["","Zj"];
         abstractM = [];
         const M_sign = new Map([["M",1],["-M",-1]]);
@@ -82,6 +85,8 @@ const iterate = (sizes:completeSizes,typeObj:string,matrix:any[][],lastAbstM:num
                  }
              }
              abstractM.push([m_counter, non_M]);
+             m_counter= m_counter == Math.floor(m_counter)?m_counter:parseFloat(m_counter.toFixed(2));
+             non_M= non_M == Math.floor(non_M)?non_M:parseFloat(non_M.toFixed(2));
              nextMatrix[sizes.restLength + 2].push(`${non_M}+${m_counter}M`);//CHANGE
          }
          nextMatrix[sizes.restLength + 2].push("")
@@ -95,7 +100,9 @@ const iterate = (sizes:completeSizes,typeObj:string,matrix:any[][],lastAbstM:num
              else {
                  abstractM[i][1] += nextMatrix[0][i + 2];
              }
-             nextMatrix[nextMatrix.length - 1].push(`${abstractM[i][1]}+${abstractM[i][0]}M`);//CHANGE
+             const m_counter:number= abstractM[i][1] == Math.floor(abstractM[i][1])?abstractM[i][1]:parseFloat(abstractM[i][1].toFixed(2));
+             const non_M:number= abstractM[i][0] == Math.floor(abstractM[i][0])?abstractM[i][0]:parseFloat(abstractM[i][0].toFixed(2));
+             nextMatrix[nextMatrix.length - 1].push(`${m_counter}+${non_M}M`);//CHANGE
          }
          nextMatrix[nextMatrix.length - 1].push("");
          
@@ -103,11 +110,11 @@ const iterate = (sizes:completeSizes,typeObj:string,matrix:any[][],lastAbstM:num
          const rowSelection = getSelectedRow(nextMatrix,pivotColumn,{restLength:sizes.restLength,funcLength:sizes.funcLength});
          pivotRow = rowSelection.selectedRow;
          nextMatrix = rowSelection.matrix;
-         console.log(nextMatrix)
          oldMatrix = nextMatrix;
-         
-         
+         information.push({matrix:oldMatrix,selectedColumn:pivotColumn,selectedRow:pivotRow,columnSize:sizes.funcLength+4})
+         outBounds++
      }
+     return information;
 }
 
 const standardize = (params:finalParameters)=>{
@@ -190,6 +197,8 @@ const simplex = (params:finalParameters)=>{
             }
         }
         abstractM.push([m_counter,non_M])
+        m_counter= m_counter == Math.floor(m_counter)?m_counter:parseFloat(m_counter.toFixed(2));
+        non_M= non_M == Math.floor(non_M)?non_M:parseFloat(non_M.toFixed(2));
         matrix[enter_values.restrictions.length+2].push(`${non_M}+${m_counter}M`);//CHANGE
     }
     matrix[enter_values.restrictions.length+2].push("");
@@ -203,7 +212,9 @@ const simplex = (params:finalParameters)=>{
         else{
             abstractM[i][1]+= matrix[0][i+2];
         }
-        matrix[matrix.length-1].push(`${abstractM[i][1]}+${abstractM[i][0]}M`);//CHANGE
+        const m_counter:number= abstractM[i][1] == Math.floor(abstractM[i][1])?abstractM[i][1]:parseFloat(abstractM[i][1].toFixed(2));
+        const non_M:number= abstractM[i][0] == Math.floor(abstractM[i][0])?abstractM[i][0]:parseFloat(abstractM[i][0].toFixed(2));
+        matrix[matrix.length-1].push(`${m_counter}+${non_M}M`);//CHANGE
     }
     matrix[matrix.length-1].push("");
     const selectedColumn= getGreaterColumn(params.typeObj,abstractM,1000);
@@ -211,12 +222,27 @@ const simplex = (params:finalParameters)=>{
     matrix = rowSelection.matrix;
     const sizes= {M:1000,funcLength:enter_values.funcObj.size,restLength:enter_values.restrictions.length,selectedColumn:selectedColumn,selectedRow:rowSelection.selectedRow}; 
     
-    console.log(abstractM)
+
     console.log(matrix);
-    console.log("valid?:"+validTable(params.typeObj,abstractM,1000));
-    console.log("Column selected: " + getGreaterColumn(params.typeObj,abstractM,1000));
-    console.log("Row selected: " + rowSelection.selectedRow)
-    iterate(sizes,params.typeObj,matrix,abstractM);
+    let valueStack= iterate(sizes,params.typeObj,matrix,abstractM);
+    valueStack= valueStack.map((element)=>{
+        let flatList:any[] = [];
+        for (let i = 0; i < element.matrix.length; i++) {
+            for (let j = 0; j < element.matrix[0].length; j++) {
+                if(typeof(element.matrix[i][j]) == "number" && element.matrix[i][j] != Math.floor(element.matrix[i][j])){
+                    flatList.push(element.matrix[i][j].toFixed(2));
+                }
+                else{
+                    flatList.push(element.matrix[i][j])
+                }
+            }
+            
+        }
+
+        return {matrix:flatList,selectedColumn:element.selectedColumn,selectedRow:element.selectedRow,columnSize:sizes.funcLength+4}
+    });
+    console.log(valueStack)
+    return valueStack;
 }
 
 export default simplex;

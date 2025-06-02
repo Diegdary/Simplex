@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import "./styles/index.css"
 import React from 'react'
-import  { type restriction,type finalParameters, changeArray } from './steps/structures';
+import  { type restriction,type finalParameters, type finalValues, changeArray } from './steps/structures';
 import simplex from './steps/algorithm';
 
 function App() {
   const [objective, setObjective] = useState<string>("Max");
   const [func, setFunc] = useState<string[]>([]);
   const [restrictions, setRestriction] = useState<restriction[]>([]);//restrictions have every coeficient and the value they are being compared to.
+  const [answer,setAnswer] = useState<finalValues[]>([]);
 
    
 
@@ -133,13 +134,15 @@ function App() {
     let finalData=compatibleData(first_list,second_list,typeObj);
     if(finalData){
       console.log("simplex!:")
-      simplex(finalData);
+      console.log(simplex(finalData));
+      setAnswer(simplex(finalData))
     }
     else{
       alert("Datos no válidos.");
     }
     
   }
+
 
   return (
     <>
@@ -188,6 +191,18 @@ function App() {
         <div>
           <button onClick={()=>execution(func,restrictions,objective)}>Aplicar</button>
         </div>
+      </div>
+      <div id='answer'>
+        {answer.map((element,index)=>(
+            <div key={index} style={{width:"80vw",height:"50vh",display:"grid",gridTemplateColumns:`repeat(${element.columnSize},1fr)`,gridAutoRows:"1fr"}}>
+                {element.matrix.map((subElement,subIndex)=>(
+                  <div key={subIndex} className='grid-child'>
+                  {subElement}
+                </div>
+              ))}
+            </div>
+          ))
+        }
       </div>
     </>
   )

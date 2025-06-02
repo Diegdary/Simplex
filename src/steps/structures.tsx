@@ -33,6 +33,13 @@ export interface completeSizes{
   selectedColumn:number
 } 
 
+export interface finalValues{
+    matrix: any[],
+    selectedRow: number,
+    selectedColumn: number,
+    columnSize:number
+}
+
 export const standardTable = {
   "Min":{
     "function":{
