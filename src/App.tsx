@@ -1,211 +1,242 @@
-import { useState } from 'react'
-import "./styles/index.css"
-import React from 'react'
-import  { type restriction,type finalParameters, type finalValues, changeArray } from './steps/structures';
+import React, { useState } from 'react';
+import './styles/index.css';
+import {
+  type restriction,
+  type finalParameters,
+  type finalValues,
+  changeArray,
+} from './steps/structures';
 import simplex from './steps/algorithm';
 
-function App() {
-  const [objective, setObjective] = useState<string>("Max");
+function App(): React.JSX.Element {
+  const [objective, setObjective] = useState<string>('Max');
   const [func, setFunc] = useState<string[]>([]);
-  const [restrictions, setRestriction] = useState<restriction[]>([]);//restrictions have every coeficient and the value they are being compared to.
-  const [answer,setAnswer] = useState<finalValues[]>([]);
+  const [restrictions, setRestriction] = useState<restriction[]>([]);
+  const [answer, setAnswer] = useState<finalValues[]>([]);
 
-   
+  const updateFuncSize = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newSize = parseInt(e.target.value);
+    const restrictionsInput = document.getElementById('nrestricciones') as HTMLInputElement;
+    updateRestrictionsSize(restrictionsInput, newSize);
+    setFunc((prev) => changeArray(prev, newSize, '1'));
+  };
 
-  const funcController = (e:React.ChangeEvent<HTMLInputElement>)=>{
-    const current_length = parseInt(e.target.value);
-    restSizeController((document.getElementById("nrestricciones") as HTMLInputElement)!, current_length);
-    setFunc((last=>{
-      const limit = current_length;
-      return changeArray(last,limit,"1");
-    }));
-    
-  }
+  const updateFuncValue = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const value = e.target.value;
+    setFunc((prev) => {
+      const updated = [...prev];
+      updated[index] = value;
+      return updated;
+    });
+  };
 
-  const funcValueController = (e: React.ChangeEvent<HTMLInputElement>,index:number)=>{
-    const received =e.target.value;
-    setFunc((last)=>{
-      let new_list = [...last];
-      new_list[index]= received;
-
-      return new_list;
-    })
-  }
-
-  const restSizeController = (e:HTMLInputElement,funcLength:number)=>{
-
-    let limit:number = parseInt(e.value);
-    
-    setRestriction((last)=>{
-      let new_restrictions:restriction[] = []
+  const updateRestrictionsSize = (e: HTMLInputElement, funcLength: number) => {
+    const limit = parseInt(e.value);
+    setRestriction((prev) => {
+      const updated: restriction[] = [];
       for (let i = 0; i < limit; i++) {
-        if (i < last.length) {
-          //CREATE A FUNCTION THAT MAKES THIS SHIT AUTOMATICALLY
-          let tmp_rest:string[] = changeArray(last[i].variableValues as string[], funcLength, "0");
-          new_restrictions.push({constant:last[i].constant,sign:last[i].sign,variableValues:tmp_rest});
-        }
-        else{
-          let element:string[] = [];
-          for (let j = 0; j < funcLength; j++) {
-            element[j]= "0";
-          } 
-          new_restrictions.push({constant:"0",sign:"<=",variableValues:element});
+        if (i < prev.length) {
+          const vars = changeArray(prev[i].variableValues as string[], funcLength, '0');
+          updated.push({ constant: prev[i].constant, sign: prev[i].sign, variableValues: vars });
+        } else {
+          updated.push({
+            constant: '0',
+            sign: '<=',
+            variableValues: Array(funcLength).fill('0'),
+          });
         }
       }
-      return new_restrictions;
+      return updated;
     });
+  };
 
-  }
-
-  const restValues = (e:React.ChangeEvent<HTMLInputElement>|React.ChangeEvent<HTMLSelectElement>,mode:number, indexes:{parent:number,child?:number})=>{
-    setRestriction((last)=>{
-      const new_restriction = structuredClone(last);
+  const handleRestrictionChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    mode: 0 | 1 | 2,
+    { parent, child }: { parent: number; child?: number }
+  ) => {
+    setRestriction((prev) => {
+      const updated = structuredClone(prev);
       switch (mode) {
         case 0:
-          new_restriction[indexes.parent].variableValues[indexes.child!] = e.target.value;
+          updated[parent].variableValues[child!] = e.target.value;
           break;
         case 1:
-          new_restriction[indexes.parent].sign = e.target.value as restriction["sign"];
+          updated[parent].sign = e.target.value as restriction['sign'];
           break;
         case 2:
-          new_restriction[indexes.parent].constant= e.target.value;
-          break;
-        default:
-          alert("Something's wrong...");
+          updated[parent].constant = e.target.value;
           break;
       }
-     
-      return new_restriction;
+      return updated;
     });
-  }
+  };
 
-  
+  const renderFunctionInputs = (array: string[]): React.JSX.Element[] =>
+    array.map((value, index) => (
+      <p key={index}>
+        <input
+          type="number"
+          value={value}
+          onChange={(e) => updateFuncValue(e, index)}
+        />
+        X<sub>{index + 1}</sub>
+        {index !== array.length - 1 ? ' + ' : ''}
+      </p>
+    ));
 
-  const noNegativityBuilder = (): React.JSX.Element[]=>{
-    let new_list = [...func]
-    new_list.pop();
-    return new_list.map((value,index)=>(
-            <p key={value}>X<sub>{index+1},</sub></p>
-            ))
-  }
+  const renderNonNegativity = (): React.JSX.Element[] =>
+    func.map((_, index) => (
+      <p key={index}>
+        X<sub>{index + 1}</sub>
+        {index !== func.length - 1 ? ', ' : ' ≥ 0'}
+      </p>
+    ));
 
-  const anyListBuilder = (array:any[]): React.JSX.Element[]=>{
-      let new_list=[...array];
-      new_list.pop();
-      return new_list.map((value,index)=>(
-              <p key={index}>
-              <input type="number" id="" value={value} onChange={e => funcValueController(e,index)}/> X<sub>{index+1}</sub> +
-              </p>))
-  }
+  const parseData = (
+    funcList: string[],
+    restrictionsList: restriction[],
+    objType: string
+  ): finalParameters | null => {
+    const result: finalParameters = {
+      finalFunc: [],
+      finalRestric: structuredClone(restrictionsList),
+      typeObj: objType as finalParameters['typeObj'],
+    };
 
-  const compatibleData = (first_list:string[],second_list:restriction[],typeObj:string):finalParameters | null=>{
-    
-    let finalData:finalParameters = {finalFunc:[],finalRestric:second_list,typeObj:typeObj as finalParameters["typeObj"]};
-    if(!first_list.length || !second_list.length){
-      return null;
+    for (const num of funcList) {
+      const parsed = parseFloat(num);
+      if (isNaN(parsed)) return null;
+      result.finalFunc.push(parsed);
     }
-    //type casting of the function list:
-    for (const num of first_list) {
-      const item = parseFloat(num);
-      if(isNaN(item)){
-        return null;
-      }
-      finalData.finalFunc.push(item);
-    }
-    //type casting of the restriction list:
-    for (let i = 0; i < second_list.length; i++) {
-      for(let j=0; j < second_list[i].variableValues.length; j++){
-        const item = parseFloat(second_list[i].variableValues[j] as string);
-        if(isNaN(item)){
-          return null
-        }
-        finalData.finalRestric[i].variableValues[j] = item;
-      }
-      const item =parseFloat(second_list[i].constant as string);
-      if (isNaN(item)) {
-        return null
-      }
-      finalData.finalRestric[i].constant = item;
-    }
-    return finalData;
-  }
 
-  const execution = (first_list:string[],second_list:restriction[],typeObj:string)=>{
-    let finalData=compatibleData(first_list,second_list,typeObj);
-    if(finalData){
-      console.log("simplex!:")
-      console.log(simplex(finalData));
-      setAnswer(simplex(finalData))
+    for (let i = 0; i < result.finalRestric.length; i++) {
+      const r = result.finalRestric[i];
+      r.variableValues = r.variableValues.map((v) => {
+        const parsed = parseFloat(v as string);
+        if (isNaN(parsed)) throw new Error('Invalid value');
+        return parsed;
+      });
+      const parsedConst = parseFloat(r.constant as string);
+      if (isNaN(parsedConst)) return null;
+      r.constant = parsedConst;
     }
-    else{
-      alert("Datos no válidos.");
-    }
-    
-  }
 
+    return result;
+  };
+
+  const runSimplex = () => {
+    try {
+      const data = parseData(func, restrictions, objective);
+      if (!data) throw new Error('Datos no válidos');
+      const result = simplex(data);
+      setAnswer(result);
+    } catch {
+      alert('Datos no válidos.');
+    }
+  };
 
   return (
     <>
-      <h1 className='title'>Método Simplex</h1>
-      <div className='parameters'>
+      <h1 className="title">Método Simplex</h1>
+      <div className="parameters">
         <h2>Función Objetivo:</h2>
-        <p id='objective'>Z(
-          <select className='border_none' name="objective" id="obj" onChange={(e)=>{setObjective(e.target.value)}}>
+        <p id="objective">
+          Z(
+          <select
+            className="border_none"
+            name="objective"
+            id="obj"
+            onChange={(e) => setObjective(e.target.value)}
+          >
             <option value="Max">Max</option>
             <option value="Min">Min</option>
-          </select>)
+          </select>
+          )
         </p>
+
         <p>
-          Número de Variables: <input type="number" id="nvariables" value={func.length} onChange={(e)=>{funcController(e)}} />
+          Número de Variables:{' '}
+          <input type="number" id="nvariables" value={func.length} onChange={updateFuncSize} />
         </p>
-        <div className='row' id='funcionObjetivo'>
-          {anyListBuilder(func)}
-          <p key={func.length}>
-              <input type="number" id="" value={func[func.length-1]} onChange={e => funcValueController(e,func.length-1)}/> X<sub>{func.length}</sub>
-              </p>
-          </div>
-        <h2>
-          Sujeto A:
-        </h2>
+
+        <div className="row" id="funcionObjetivo">
+          {renderFunctionInputs(func)}
+        </div>
+
+        <h2>Sujeto A:</h2>
         <p>
-          Cantidad de Restricciones: <input type="number" name="" id="nrestricciones" value={restrictions.length} onChange={(e)=>{restSizeController(e.target,func.length)}} />
+          Cantidad de Restricciones:{' '}
+          <input
+            type="number"
+            id="nrestricciones"
+            value={restrictions.length}
+            onChange={(e) => updateRestrictionsSize(e.target, func.length)}
+          />
         </p>
-        <div id='restricciones'>
-            {restrictions.map((value,index)=>(
-              <div className='row' key={index}>
-                {value.variableValues.map((coef,each)=>(<p key={each}><input type="number" value={coef} onChange={e=>restValues(e,0,{parent:index,child:each})}/>X<sub>{each+1}</sub> + </p>))}
-                <select className='border_none' id='random' name="" onChange={e=>{restValues(e,1,{parent:index})}}>
-                  <option value="<=">&lt;=</option>
-                  <option value=">=">&gt;=</option>
-                  <option value="=">=</option>
-                </select>
-                <input type="number" value={value.constant} onChange={e=>{restValues(e,2,{parent:index})}}/>
-              </div>)
-            )}
-        </div>
-        <h2>No negatividad:</h2>
-        <div className='row' id='NoNegatividad'>
-          {noNegativityBuilder()}
-          <p>X<sub>{func.length}</sub> &gt;= 0</p>
-        </div>
-        <div>
-          <button onClick={()=>execution(func,restrictions,objective)}>Aplicar</button>
-        </div>
-      </div>
-      <div id='answer'>
-        {answer.map((element,index)=>(
-            <div key={index} style={{width:"80vw",height:"50vh",display:"grid",gridTemplateColumns:`repeat(${element.columnSize},1fr)`,gridAutoRows:"1fr"}}>
-                {element.matrix.map((subElement,subIndex)=>(
-                  <div key={subIndex} className='grid-child'>
-                  {subElement}
-                </div>
+
+        <div id="restricciones">
+          {restrictions.map((r, index) => (
+            <div className="row" key={index}>
+              {r.variableValues.map((coef, i) => (
+                <p key={i}>
+                  <input
+                    type="number"
+                    value={coef}
+                    onChange={(e) => handleRestrictionChange(e, 0, { parent: index, child: i })}
+                  />
+                  X<sub>{i + 1}</sub>
+                  {i !== r.variableValues.length - 1 ? ' + ' : ''}
+                </p>
               ))}
+              <select
+                className="border_none"
+                value={r.sign}
+                onChange={(e) => handleRestrictionChange(e, 1, { parent: index })}
+              >
+                <option value="<=">&lt;=</option>
+                <option value=">=">&gt;=</option>
+                <option value="=">=</option>
+              </select>
+              <input
+                type="number"
+                value={r.constant}
+                onChange={(e) => handleRestrictionChange(e, 2, { parent: index })}
+              />
             </div>
-          ))
-        }
+          ))}
+        </div>
+
+        <h2>No negatividad:</h2>
+        <div className="row" id="NoNegatividad">
+          {renderNonNegativity()}
+        </div>
+
+        <button onClick={runSimplex}>Aplicar</button>
+      </div>
+
+      <div id="answer">
+        {answer.map((table, i) => (
+          <div
+            key={i}
+            style={{
+              width: '80vw',
+              height: '50vh',
+              display: 'grid',
+              gridTemplateColumns: `repeat(${table.columnSize}, 1fr)`,
+              gridAutoRows: '1fr',
+            }}
+          >
+            {table.matrix.map((cell, j) => (
+              <div key={j} className="grid-child">
+                {cell}
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
