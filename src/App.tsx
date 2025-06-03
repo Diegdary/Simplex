@@ -12,7 +12,19 @@ function App(): React.JSX.Element {
   const [objective, setObjective] = useState<string>('Max');
   const [func, setFunc] = useState<string[]>([]);
   const [restrictions, setRestriction] = useState<restriction[]>([]);
-  const [answer, setAnswer] = useState<{columnSize:number,iterations:finalValues[],standarized:{function:any[],restriction:any[][][],fMap:any[][]}}>({columnSize:0,iterations:[],standarized:{function:[],restriction:[],fMap:[]}});
+  const [answer, setAnswer] = useState<{
+    columnSize: number;
+    iterations: finalValues[];
+    standarized: {
+      function: any[];
+      restriction: any[][][];
+      fMap: any[][];
+    };
+  }>({
+    columnSize: 0,
+    iterations: [],
+    standarized: { function: [], restriction: [], fMap: [] },
+  });
 
   const updateFuncSize = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newSize = parseInt(e.target.value);
@@ -136,36 +148,42 @@ function App(): React.JSX.Element {
     }
   };
 
-  const standFunc = ()=>{
-    console.log(answer)
-    return answer.standarized.function.map((value,index)=>(
+  const standFunc = () => {
+    return answer.standarized.function.map((value, index) => (
       <p key={index}>
-        {index < answer.standarized.function.length-1 ? value[1]+value[0]+"+" : value[1]+value[0]}
-      </p>))
-  }
+        {index < answer.standarized.function.length - 1 ? value[1] + value[0] + "+" : value[1] + value[0]}
+      </p>
+    ));
+  };
 
-  const standRest= ()=>{
-    return answer.standarized.restriction.map((currentRest,restIndex)=>(<div className='row' key={restIndex}>
-      {currentRest.map((data,index)=>index < currentRest.length-2?(<div key={index}>{data[1]+""+data[0]+" +"}</div>):"")}
-      {currentRest[currentRest.length-2][1]+""+currentRest[currentRest.length-2][0]} = {currentRest[currentRest.length-1][1]}
-    </div>));
-    
-  }
+  const standRest = () => {
+    return answer.standarized.restriction.map((currentRest, restIndex) => (
+      <div className='row' key={restIndex}>
+        {currentRest.map((data, index) =>
+          index < currentRest.length - 2 ? (
+            <div key={index}>{data[1] + "" + data[0] + " +"}</div>
+          ) : ""
+        )}
+        {currentRest[currentRest.length - 2][1] + "" + currentRest[currentRest.length - 2][0]} = {currentRest[currentRest.length - 1][1]}
+      </div>
+    ));
+  };
 
-  const finalAnswer = ()=>{
-    return answer.standarized.fMap.map((element)=>(
-    <div>
-      {element[0]+ " = " +element[1]}
-    </div>
-  ))
-  }
+  const finalAnswer = () => {
+    return answer.standarized.fMap.map((element, index) => (
+      <div key={index}>
+        {element[0] + " = " + element[1]}
+      </div>
+    ));
+  };
 
-  const noNegativityStandFunc = ()=>{
-    return answer.standarized.function.map((value,index)=>(
+  const noNegativityStandFunc = () => {
+    return answer.standarized.function.map((value, index) => (
       <p key={index}>
-        {index < answer.standarized.function.length-1 ? value[0]+", " : value[0] + " >= 0"}
-      </p>))
-  }
+        {index < answer.standarized.function.length - 1 ? value[0] + ", " : value[0] + " >= 0"}
+      </p>
+    ));
+  };
 
   return (
     <>
@@ -245,20 +263,19 @@ function App(): React.JSX.Element {
 
         <button onClick={runSimplex}>Aplicar</button>
       </div>
-      {answer.standarized.function.length != 0?
-      <div id='stardarized' >
-        <h2>Estandarización:</h2>
-        <div className='row'>Z({objective})={standFunc()}</div>
-        <h3>S.A.</h3>
-        <div>{standRest()}</div>
-        <div className='finalAns'>
-        <h3>No negatividad</h3>
-        <div className='row'>{noNegativityStandFunc()}</div>
-      </div>
-      </div>:""}
-      
 
-      
+      {answer.standarized.function.length !== 0 &&
+        <div id='stardarized'>
+          <h2>Estandarización:</h2>
+          <div className='row'>Z({objective})={standFunc()}</div>
+          <h3>S.A.</h3>
+          <div>{standRest()}</div>
+          <div className='finalAns'>
+            <h3>No negatividad</h3>
+            <div className='row'>{noNegativityStandFunc()}</div>
+          </div>
+        </div>
+      }
 
       <div id="answer">
         {answer.iterations.map((table, i) => (
@@ -272,20 +289,30 @@ function App(): React.JSX.Element {
               gridAutoRows: '1fr',
             }}
           >
-            {table.matrix.map((cell, j) => (
-              <div key={j} className="grid-child">
-                {cell}
-              </div>
-            ))}
+            {table.matrix.map((cell, j) => {
+              const row = Math.floor(j / answer.columnSize);
+              const col = j % answer.columnSize;
+              const isLastTable = i === answer.iterations.length - 1;
+              const isPivot = !isLastTable && (row === table.selectedRow || col === table.selectedColumn);
+              return (
+                <div key={j} className={`grid-child ${isPivot ? 'pivot' : ''}`}>
+                  {cell}
+                </div>
+              );
+            })}
           </div>
         ))}
       </div>
-      {answer.standarized.fMap.length != 0?<div className='finalAns'>
-        <h2>Respuesta:</h2>
+
+      {answer.standarized.fMap.length !== 0 &&
         <div className='finalAns'>
-          {finalAnswer()}
-        </div>        
-      </div>:""}
+          <h2>Respuesta:</h2>
+          <div className='finalAns'>
+            {finalAnswer()}
+          </div>
+        </div>
+      }
+
       <br />
     </>
   );
