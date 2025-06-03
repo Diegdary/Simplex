@@ -237,7 +237,7 @@ const simplex = (params:finalParameters)=>{
 
     console.log(matrix);
     let valueStack= iterate(sizes,params.typeObj,matrix,abstractM);
-    let funcMap = new Map()
+    let funcMap = new Map([["Z("+params.typeObj+")",valueStack[valueStack.length-1].matrix[enter_values.restrictions.length+2][2]]])
     for (let i = 2; i < sizes.restLength+2; i++) { 
             funcMap.set(valueStack[valueStack.length-1].matrix[i][1],valueStack[valueStack.length-1].matrix[i][2].toFixed(2));
     }

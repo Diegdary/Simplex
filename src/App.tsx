@@ -145,8 +145,8 @@ function App(): React.JSX.Element {
   }
 
   const standRest= ()=>{
-    return answer.standarized.restriction.map((currentRest)=>(<div className='row'>
-      {currentRest.map((data,index)=>index < currentRest.length-2?(<div>{data[1]+""+data[0]+" +"}</div>):"")}
+    return answer.standarized.restriction.map((currentRest,restIndex)=>(<div className='row' key={restIndex}>
+      {currentRest.map((data,index)=>index < currentRest.length-2?(<div key={index}>{data[1]+""+data[0]+" +"}</div>):"")}
       {currentRest[currentRest.length-2][1]+""+currentRest[currentRest.length-2][0]} = {currentRest[currentRest.length-1][1]}
     </div>));
     
