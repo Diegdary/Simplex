@@ -12,7 +12,7 @@ function App(): React.JSX.Element {
   const [objective, setObjective] = useState<string>('Max');
   const [func, setFunc] = useState<string[]>([]);
   const [restrictions, setRestriction] = useState<restriction[]>([]);
-  const [answer, setAnswer] = useState<finalValues[]>([]);
+  const [answer, setAnswer] = useState<{columnSize:number,iterations:finalValues[]}>({columnSize:0,iterations:[]});
 
   const updateFuncSize = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newSize = parseInt(e.target.value);
@@ -216,14 +216,14 @@ function App(): React.JSX.Element {
       </div>
 
       <div id="answer">
-        {answer.map((table, i) => (
+        {answer.iterations.map((table, i) => (
           <div
             key={i}
             style={{
               width: '80vw',
               height: '50vh',
               display: 'grid',
-              gridTemplateColumns: `repeat(${table.columnSize}, 1fr)`,
+              gridTemplateColumns: `repeat(${answer.columnSize}, 1fr)`,
               gridAutoRows: '1fr',
             }}
           >

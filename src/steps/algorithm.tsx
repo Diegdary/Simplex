@@ -47,7 +47,7 @@ const validTable = (typeObj:string,list:number[][],M:number):boolean=>{
 }
 
 const iterate = (sizes:completeSizes,typeObj:string,matrix:any[][]|any[],lastAbstM:number[][])=>{
-    let information = [{matrix:matrix,selectedRow:sizes.selectedRow,selectedColumn:sizes.selectedColumn,columnSize:sizes.funcLength+4}];
+    let information = [{matrix:matrix,selectedRow:sizes.selectedRow,selectedColumn:sizes.selectedColumn}];
     let pivotColumn=sizes.selectedColumn;
     let pivotRow=sizes.selectedRow;
     let oldMatrix = structuredClone(matrix);// perhaps this one is not necessary
@@ -111,7 +111,7 @@ const iterate = (sizes:completeSizes,typeObj:string,matrix:any[][]|any[],lastAbs
          pivotRow = rowSelection.selectedRow;
          nextMatrix = rowSelection.matrix;
          oldMatrix = nextMatrix;
-         information.push({matrix:oldMatrix,selectedColumn:pivotColumn,selectedRow:pivotRow,columnSize:sizes.funcLength+4})
+         information.push({matrix:oldMatrix,selectedColumn:pivotColumn,selectedRow:pivotRow})
          outBounds++
      }
      return information;
@@ -239,10 +239,10 @@ const simplex = (params:finalParameters)=>{
             
         }
 
-        return {matrix:flatList,selectedColumn:element.selectedColumn,selectedRow:element.selectedRow,columnSize:sizes.funcLength+4}
+        return {matrix:flatList,selectedColumn:element.selectedColumn,selectedRow:element.selectedRow}
     });
     console.log(valueStack)
-    return valueStack;
+    return {iterations:valueStack,columnSize:sizes.funcLength+4};
 }
 
 export default simplex;
