@@ -76,3 +76,15 @@ button:hover {
   align-items: center;
   gap: 2rem;
 }
+
+#stardarized{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.finalAns{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}

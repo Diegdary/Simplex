@@ -12,7 +12,7 @@ function App(): React.JSX.Element {
   const [objective, setObjective] = useState<string>('Max');
   const [func, setFunc] = useState<string[]>([]);
   const [restrictions, setRestriction] = useState<restriction[]>([]);
-  const [answer, setAnswer] = useState<{columnSize:number,iterations:finalValues[]}>({columnSize:0,iterations:[]});
+  const [answer, setAnswer] = useState<{columnSize:number,iterations:finalValues[],standarized:{function:any[],restriction:any[][][],fMap:any[][]}}>({columnSize:0,iterations:[],standarized:{function:[],restriction:[],fMap:[]}});
 
   const updateFuncSize = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newSize = parseInt(e.target.value);
@@ -136,6 +136,37 @@ function App(): React.JSX.Element {
     }
   };
 
+  const standFunc = ()=>{
+    console.log(answer)
+    return answer.standarized.function.map((value,index)=>(
+      <p key={index}>
+        {index < answer.standarized.function.length-1 ? value[1]+value[0]+"+" : value[1]+value[0]}
+      </p>))
+  }
+
+  const standRest= ()=>{
+    return answer.standarized.restriction.map((currentRest)=>(<div className='row'>
+      {currentRest.map((data,index)=>index < currentRest.length-2?(<div>{data[1]+""+data[0]+" +"}</div>):"")}
+      {currentRest[currentRest.length-2][1]+""+currentRest[currentRest.length-2][0]} = {currentRest[currentRest.length-1][1]}
+    </div>));
+    
+  }
+
+  const finalAnswer = ()=>{
+    return answer.standarized.fMap.map((element)=>(
+    <div>
+      {element[0]+ " = " +element[1]}
+    </div>
+  ))
+  }
+
+  const noNegativityStandFunc = ()=>{
+    return answer.standarized.function.map((value,index)=>(
+      <p key={index}>
+        {index < answer.standarized.function.length-1 ? value[0]+", " : value[0] + " >= 0"}
+      </p>))
+  }
+
   return (
     <>
       <h1 className="title">Método Simplex</h1>
@@ -214,6 +245,20 @@ function App(): React.JSX.Element {
 
         <button onClick={runSimplex}>Aplicar</button>
       </div>
+      {answer.standarized.function.length != 0?
+      <div id='stardarized' >
+        <h2>Estandarización:</h2>
+        <div className='row'>Z({objective})={standFunc()}</div>
+        <h3>S.A.</h3>
+        <div>{standRest()}</div>
+        <div className='finalAns'>
+        <h3>No negatividad</h3>
+        <div className='row'>{noNegativityStandFunc()}</div>
+      </div>
+      </div>:""}
+      
+
+      
 
       <div id="answer">
         {answer.iterations.map((table, i) => (
@@ -235,6 +280,13 @@ function App(): React.JSX.Element {
           </div>
         ))}
       </div>
+      {answer.standarized.fMap.length != 0?<div className='finalAns'>
+        <h2>Respuesta:</h2>
+        <div className='finalAns'>
+          {finalAnswer()}
+        </div>        
+      </div>:""}
+      <br />
     </>
   );
 }

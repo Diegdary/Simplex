@@ -74,8 +74,8 @@ const iterate = (sizes:completeSizes,typeObj:string,matrix:any[][]|any[],lastAbs
         abstractM = [];
         const M_sign = new Map([["M",1],["-M",-1]]);
          for (let column = 2; column < sizes.funcLength + 3; column++) {
-             let m_counter = 0;
-             let non_M = 0;
+             let m_counter:number | string = 0;
+             let non_M:number | string = 0;
              for (let row = 2; row < sizes.restLength + 2; row++) {
                  if (M_sign.has(nextMatrix[row][0])) {
                      m_counter += nextMatrix[row][column] * M_sign.get(nextMatrix[row][0])!;
@@ -86,8 +86,11 @@ const iterate = (sizes:completeSizes,typeObj:string,matrix:any[][]|any[],lastAbs
              }
              abstractM.push([m_counter, non_M]);
              m_counter= m_counter == Math.floor(m_counter)?m_counter:parseFloat(m_counter.toFixed(2));
+             m_counter = m_counter == 0? "": m_counter+"M";
              non_M= non_M == Math.floor(non_M)?non_M:parseFloat(non_M.toFixed(2));
-             nextMatrix[sizes.restLength + 2].push(`${non_M}+${m_counter}M`);//CHANGE
+             non_M = non_M == 0? "": non_M;
+             const addedVal = m_counter+non_M == ""?0: `${non_M}+${m_counter}`;
+             nextMatrix[sizes.restLength + 2].push(addedVal);//CHANGE
          }
          nextMatrix[sizes.restLength + 2].push("")
          nextMatrix.pop();
@@ -100,9 +103,12 @@ const iterate = (sizes:completeSizes,typeObj:string,matrix:any[][]|any[],lastAbs
              else {
                  abstractM[i][1] += nextMatrix[0][i + 2];
              }
-             const m_counter:number= abstractM[i][1] == Math.floor(abstractM[i][1])?abstractM[i][1]:parseFloat(abstractM[i][1].toFixed(2));
-             const non_M:number= abstractM[i][0] == Math.floor(abstractM[i][0])?abstractM[i][0]:parseFloat(abstractM[i][0].toFixed(2));
-             nextMatrix[nextMatrix.length - 1].push(`${m_counter}+${non_M}M`);//CHANGE
+             let m_counter:number|string= abstractM[i][1] == Math.floor(abstractM[i][0])?abstractM[i][1]:parseFloat(abstractM[i][0].toFixed(2));
+             m_counter = m_counter == 0? "": m_counter+"M";
+             let non_M:number|string= abstractM[i][0] == Math.floor(abstractM[i][1])?abstractM[i][0]:parseFloat(abstractM[i][1].toFixed(2));
+             non_M = non_M == 0? "": non_M;
+             const addedVal = m_counter+non_M == ""?0: `${non_M}+${m_counter}`;
+             nextMatrix[nextMatrix.length - 1].push(addedVal);//CHANGE
          }
          nextMatrix[nextMatrix.length - 1].push("");
          
@@ -186,8 +192,8 @@ const simplex = (params:finalParameters)=>{
     let abstractM:number[][] = [];
     const M_sign = new Map([["M",1],["-M",-1]])
     for (let column = 2; column < enter_values.funcObj.size+3; column++) {
-        let m_counter =0;
-        let non_M = 0;
+        let m_counter:number | string =0;
+        let non_M:number | string = 0;
         for (let row = 2; row < enter_values.restrictions.length+2; row++) {
             if(M_sign.has(matrix[row][0])){
                 m_counter+= matrix[row][column] * M_sign.get(matrix[row][0])!;
@@ -198,8 +204,11 @@ const simplex = (params:finalParameters)=>{
         }
         abstractM.push([m_counter,non_M])
         m_counter= m_counter == Math.floor(m_counter)?m_counter:parseFloat(m_counter.toFixed(2));
+        m_counter = m_counter == 0? "": m_counter+"M";
         non_M= non_M == Math.floor(non_M)?non_M:parseFloat(non_M.toFixed(2));
-        matrix[enter_values.restrictions.length+2].push(`${non_M}+${m_counter}M`);//CHANGE
+        non_M = non_M == 0? "": non_M;
+        const addedVal = m_counter+non_M == ""?0: `${non_M}+${m_counter}`;
+        matrix[enter_values.restrictions.length+2].push(addedVal);//CHANGE
     }
     matrix[enter_values.restrictions.length+2].push("");
     matrix.push(["","Cj-Zj",""]);
@@ -212,9 +221,12 @@ const simplex = (params:finalParameters)=>{
         else{
             abstractM[i][1]+= matrix[0][i+2];
         }
-        const m_counter:number= abstractM[i][1] == Math.floor(abstractM[i][1])?abstractM[i][1]:parseFloat(abstractM[i][1].toFixed(2));
-        const non_M:number= abstractM[i][0] == Math.floor(abstractM[i][0])?abstractM[i][0]:parseFloat(abstractM[i][0].toFixed(2));
-        matrix[matrix.length-1].push(`${m_counter}+${non_M}M`);//CHANGE
+        let m_counter:number|string= abstractM[i][1] == Math.floor(abstractM[i][0])?abstractM[i][1]:parseFloat(abstractM[i][0].toFixed(2));
+        m_counter = m_counter == 0? "": m_counter+"M";
+        let non_M:number|string= abstractM[i][0] == Math.floor(abstractM[i][1])?abstractM[i][0]:parseFloat(abstractM[i][1].toFixed(2));
+        non_M = non_M == 0? "": non_M;
+        const addedVal = m_counter+non_M == ""?0: `${non_M}+${m_counter}`;
+        matrix[matrix.length-1].push(addedVal);//CHANGE
     }
     matrix[matrix.length-1].push("");
     const selectedColumn= getGreaterColumn(params.typeObj,abstractM,1000);
@@ -225,6 +237,17 @@ const simplex = (params:finalParameters)=>{
 
     console.log(matrix);
     let valueStack= iterate(sizes,params.typeObj,matrix,abstractM);
+    let funcMap = new Map()
+    for (let i = 2; i < sizes.restLength+2; i++) { 
+            funcMap.set(valueStack[valueStack.length-1].matrix[i][1],valueStack[valueStack.length-1].matrix[i][2].toFixed(2));
+    }
+    for(const element of enter_values.funcObj.keys()){
+        if (!funcMap.has(element)) {
+            funcMap.set(element,0);
+        }
+    }
+    let fMap = Array.from(funcMap);
+    console.log(fMap)
     valueStack= valueStack.map((element)=>{
         let flatList:any[] = [];
         for (let i = 0; i < element.matrix.length; i++) {
@@ -242,7 +265,9 @@ const simplex = (params:finalParameters)=>{
         return {matrix:flatList,selectedColumn:element.selectedColumn,selectedRow:element.selectedRow}
     });
     console.log(valueStack)
-    return {iterations:valueStack,columnSize:sizes.funcLength+4};
+    
+    const restListed = enter_values.restrictions.map(element=>Array.from(element))
+    return {iterations:valueStack,columnSize:sizes.funcLength+4,standarized:{function:Array.from(enter_values.funcObj),restriction:restListed,fMap:fMap}};
 }
 
 export default simplex;
