@@ -130,6 +130,7 @@ function App(): React.JSX.Element {
         return parsed;
       });
       const parsedConst = parseFloat(r.constant as string);
+      //debugger
       if (isNaN(parsedConst)) return null;
       r.constant = parsedConst;
     }
@@ -143,7 +144,8 @@ function App(): React.JSX.Element {
       if (!data) throw new Error('Datos no válidos');
       const result = simplex(data);
       setAnswer(result);
-    } catch {
+    } catch(e) {
+      console.log(e)
       alert('Datos no válidos.');
     }
   };

@@ -22,7 +22,7 @@ const getSelectedRow =(matrix:any[][],selectedColumn:number,sizes:{restLength:nu
     for (let i = 2; i < sizes.restLength+2; i++) {
         const theta = matrix[i][2]/matrix[i][selectedColumn];
         matrix[i][sizes.funcLength+3]= theta;
-        if(theta>0 && isNaN(selectedRow)){
+        if(theta>=0 && isNaN(selectedRow)){
             selectedRow = i;
         }
         if (!isNaN(selectedRow) && theta > 0 && theta<matrix[selectedRow][sizes.funcLength+3]) {
@@ -56,6 +56,7 @@ const iterate = (sizes:completeSizes,typeObj:string,matrix:any[][]|any[],lastAbs
      while (!validTable(typeObj,abstractM,sizes.M) && outBounds<10) {
         //debugger
         let nextMatrix = structuredClone(oldMatrix);
+        debugger
         nextMatrix[pivotRow][0]=nextMatrix[0][pivotColumn];
         nextMatrix[pivotRow][1]=nextMatrix[1][pivotColumn];
         //entry row
@@ -236,6 +237,7 @@ const simplex = (params:finalParameters)=>{
     
 
     console.log(matrix);
+    
     let valueStack= iterate(sizes,params.typeObj,matrix,abstractM);
     let funcMap = new Map([["Z("+params.typeObj+")",valueStack[valueStack.length-1].matrix[enter_values.restrictions.length+2][2]]])
     for (let i = 2; i < sizes.restLength+2; i++) { 
